@@ -31,7 +31,7 @@ namespace Portable.Gc.Example
 
         public IAutoMemoryManager CreateManager(IMemoryManager underlying, IRuntimeContextAccessor runtimeAccessor)
         {
-            return new AutoMemoryManagerImpl();
+            return new AutoMemoryManagerImpl(underlying);
         }
 
         public void Dispose()
@@ -41,14 +41,15 @@ namespace Portable.Gc.Example
 
     public class AutoMemoryManagerImpl : IAutoMemoryManager
     {
+        readonly IMemoryManager _underlying;
 
-        public AutoMemoryManagerImpl()
+        public AutoMemoryManagerImpl(IMemoryManager underlying)
         {
         }
 
         public IntPtr Alloc(int size)
         {
-            return Marshal.AllocHGlobal(size);
+            return _underlying.Alloc(size);
         }
 
         public void ForceCollection(int generation)
@@ -57,7 +58,7 @@ namespace Portable.Gc.Example
 
         public void Free(IntPtr blockPtr)
         {
-            Marshal.FreeHGlobal(blockPtr);
+            _underlying.Free(blockPtr);
         }
 
         public void OnWriteRefMember(IntPtr blockPtr, IntPtr refPtr)
