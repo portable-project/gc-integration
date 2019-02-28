@@ -45,6 +45,7 @@ namespace Portable.Gc.Example
 
         public AutoMemoryManagerImpl(IMemoryManager underlying)
         {
+            _underlying = underlying;
         }
 
         public IntPtr Alloc(int size)

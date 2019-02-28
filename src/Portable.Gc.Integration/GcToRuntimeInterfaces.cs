@@ -8,6 +8,9 @@ namespace Portable.Gc.Integration
 {
     public interface IMemoryManagerFabric
     {
+        string Name { get; }
+        Version Version { get; }
+
         IMemoryManager CreateManager(IMemoryManager underlying);
     }
 
@@ -19,7 +22,10 @@ namespace Portable.Gc.Integration
 
     public interface IAutoMemoryManagerFabric
     {
-        IAutoMemoryManagementContext CreateManagerContext(IRuntimeGlobalAccessor runtimeInfoAccessor);
+        string Name { get; }
+        Version Version { get; }
+
+        IAutoMemoryManagementContext CreateManagerContext(IRuntimeGlobalAccessor runtimeGlobalAccessor);
     }
 
     public interface IAutoMemoryManagementContext : IDisposable
@@ -37,6 +43,11 @@ namespace Portable.Gc.Integration
 
         void ForceCollection(int generation);
     }
+
+    //public interface ICollectionSessionAccessor
+    //{
+    //    bool IsAlive(IntPtr blockPtr);
+    //}
 
     public interface IMemManIntegration
     {

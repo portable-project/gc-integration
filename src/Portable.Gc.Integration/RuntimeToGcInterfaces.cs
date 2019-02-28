@@ -12,11 +12,15 @@ namespace Portable.Gc.Integration
 
         void RequestStop(Action callback);
 
+        // IRuntimeCollectionSession BeginCollection(ICollectionSessionAccessor collectionSessionAccessor);
+
         IRuntimeCollectionSession BeginCollection();
     }
 
     public interface IRuntimeCollectionSession : IDisposable
     {
+        int RootPrioritiesCount { get; }
+
         IEnumerable<IntPtr> GetRoots(int rootsPriority);
     }
 
@@ -63,6 +67,7 @@ namespace Portable.Gc.Integration
 
         int? Offset { get; set; }
         int Size { get; set; }
+        int? Alignment { get; set; }
 
         int? BitIndex { get; set; }
         int BitsCount { get; set; }
