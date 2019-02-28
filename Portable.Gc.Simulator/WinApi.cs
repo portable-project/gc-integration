@@ -15,5 +15,7 @@ namespace Portable.Gc.Simulator
         [DllImport("kernel32.dll", EntryPoint = "CopyMemory", SetLastError = false)]
         public static extern void CopyMemory(IntPtr dest, IntPtr src, int count);
 
+        [DllImport("Kernel32.dll", EntryPoint = "RtlZeroMemory", SetLastError = false)]
+        public static extern void RtlZeroMemory(IntPtr dest, IntPtr size); 
     }
 }

@@ -27,6 +27,7 @@ namespace Portable.Gc.Integration
     public interface IRuntimeGlobalAccessor : IRuntimeContextAccessor
     {
         INativeStructureLayoutInfo GetLayoutInfo(IntPtr blockPtr);
+        INativeStructureLayoutInfo GetDefaultLayoutInfo();
     }
 
     public interface INativeStructureLayoutInfo
@@ -35,7 +36,7 @@ namespace Portable.Gc.Integration
         int DataSize { get; }
         int AlignedSize { get; }
 
-        IReadOnlyCollection<INativeStructureFieldInfo> Fields { get; }
+        IReadOnlyList<INativeStructureFieldInfo> Fields { get; }
     }
 
     public interface INativeStructureFieldInfo

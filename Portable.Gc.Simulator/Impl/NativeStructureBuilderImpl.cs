@@ -11,6 +11,7 @@ namespace Portable.Gc.Simulator.Impl
     internal class NativeStructureBuilderImpl : INativeStructureBuilder
     {
         private readonly List<NativeStructureFieldBuilderImpl> _fields;
+        private readonly INativeLayoutContext _ctx;
 
         public string StructureName { get; private set; }
 
@@ -18,8 +19,10 @@ namespace Portable.Gc.Simulator.Impl
         public int? FieldsAligmnent { get; set; }
         public int? StructureAlignment { get; set; }
 
-        public NativeStructureBuilderImpl(string structureName)
+        public NativeStructureBuilderImpl(INativeLayoutContext ctx, string structureName)
         {
+            _ctx = ctx;
+
             this.StructureName = structureName;
             this.UseDefaultFieldAlignment = true;
             this.FieldsAligmnent = null;
@@ -28,8 +31,10 @@ namespace Portable.Gc.Simulator.Impl
             _fields = new List<NativeStructureFieldBuilderImpl>();
         }
 
-        public NativeStructureBuilderImpl(string structureName, NativeStructureBuilderImpl other)
+        public NativeStructureBuilderImpl(INativeLayoutContext ctx, string structureName, NativeStructureBuilderImpl other)
         {
+            _ctx = ctx;
+
             this.StructureName = structureName;
             this.UseDefaultFieldAlignment = other.UseDefaultFieldAlignment;
             this.FieldsAligmnent = other.FieldsAligmnent;
@@ -79,7 +84,7 @@ namespace Portable.Gc.Simulator.Impl
                 if (this.FieldsAligmnent.HasValue)
                     off = off.AlignTo(this.FieldsAligmnent.Value);
 
-                fields.Add(new NativeStructureFieldInfoImpl(item.Number, item.Name, off, size, 0, item.Size > 0 ? 0 : item.BitsCount, item.IsReference));
+                fields.Add(new NativeStructureFieldInfoImpl(_ctx, item.Number, item.Name, off, size, 0, item.Size > 0 ? 0 : item.BitsCount, item.IsReference));
 
                 off += size;
             }

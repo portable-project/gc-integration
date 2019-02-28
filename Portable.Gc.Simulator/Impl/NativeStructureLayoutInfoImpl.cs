@@ -9,15 +9,20 @@ using Portable.Gc.Integration;
 
 namespace Portable.Gc.Simulator.Impl
 {
+    interface INativeLayoutContext
+    {
+        int ObjRefDiff { get; }
+    }
+
     internal class NativeStructureLayoutInfoImpl : INativeStructureLayoutInfo
     {
         public string Name { get; }
 
         public int DataSize { get; }
         public int AlignedSize { get; }
-        public IReadOnlyCollection<INativeStructureFieldInfo> Fields { get; }
+        public IReadOnlyList<INativeStructureFieldInfo> Fields { get; }
 
-        public NativeStructureLayoutInfoImpl(string name, int? structureSizeAlignment, IReadOnlyCollection<INativeStructureFieldInfo> fields)
+        public NativeStructureLayoutInfoImpl(string name, int? structureSizeAlignment, IReadOnlyList<INativeStructureFieldInfo> fields)
         {
             this.Name = name;
             this.Fields = fields;
@@ -38,8 +43,12 @@ namespace Portable.Gc.Simulator.Impl
         public int BitsCount { get; }
         public bool IsReference { get; }
 
-        public NativeStructureFieldInfoImpl(int number, string name, int offset, int size, int bitIndex, int bitsCount, bool isReference)
+        readonly INativeLayoutContext _ctx;
+
+        public NativeStructureFieldInfoImpl(INativeLayoutContext ctx, int number, string name, int offset, int size, int bitIndex, int bitsCount, bool isReference)
         {
+            _ctx = ctx;
+
             this.Number = number;
             this.Name = name;
             this.Offset = offset;
@@ -49,11 +58,17 @@ namespace Portable.Gc.Simulator.Impl
             this.IsReference = isReference;
         }
 
-        public void GetValue(IntPtr blockPtr, IntPtr buffer)
+        public unsafe void GetValue(IntPtr blockPtr, IntPtr buffer)
         {
             if (this.BitIndex == 0)
             {
                 WinApi.CopyMemory(buffer, blockPtr + this.Offset, this.Size);
+
+                if(this.IsReference)
+                {
+                    IntPtr* p = (IntPtr*)buffer.ToPointer();
+                    p[0] -= _ctx.ObjRefDiff;
+                }
             }
             else
             {
@@ -69,11 +84,16 @@ namespace Portable.Gc.Simulator.Impl
             }
         }
 
-        public void SetValue(IntPtr blockPtr, IntPtr buffer)
+        public unsafe void SetValue(IntPtr blockPtr, IntPtr buffer)
         {
             if (this.BitIndex == 0)
             {
                 WinApi.CopyMemory(blockPtr + this.Offset, buffer, this.Size);
+                if (this.IsReference)
+                {
+                    IntPtr* p = (IntPtr*)(blockPtr + this.Offset).ToPointer();
+                    p[0] += _ctx.ObjRefDiff;
+                }
             }
             else
             {

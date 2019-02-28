@@ -7,7 +7,7 @@ using Portable.Gc.Integration;
 
 namespace Portable.Gc.Simulator.Impl
 {
-    internal unsafe class RuntimeGlobalAccessorImpl : IRuntimeGlobalAccessor, IDisposable
+    internal unsafe class RuntimeGlobalAccessorImpl : IRuntimeGlobalAccessor, INativeLayoutContext, IDisposable
     {
         public bool IsRunning { get; }
 
@@ -22,9 +22,11 @@ namespace Portable.Gc.Simulator.Impl
         public event Action StopReleased = delegate { };
         public event Func<IntPtr[]> GetRoots = delegate { return new IntPtr[0]; };
 
+        int INativeLayoutContext.ObjRefDiff { get { return _typeIdFieldInfo.Offset; } }
+
         public RuntimeGlobalAccessorImpl(IAutoMemoryManagerFabric gcFabric)
         {
-            var stb = new NativeStructureBuilderImpl("object");
+            var stb = new NativeStructureBuilderImpl(this, "object");
 
             _gcCtx = gcFabric.CreateManagerContext(this);
             if (_gcCtx.Integration != null)
@@ -55,7 +57,7 @@ namespace Portable.Gc.Simulator.Impl
             var count = 1000;
             for (int i = 1; i < count; i++)
             {
-                var stb = new NativeStructureBuilderImpl("r" + i, objectStb);
+                var stb = new NativeStructureBuilderImpl(this, "r" + i, objectStb);
 
                 var fieldsCount = rnd.Next(0, 40);
                 for (int j = 0; j < fieldsCount; j++)
@@ -87,6 +89,7 @@ namespace Portable.Gc.Simulator.Impl
             var layoutInfo = this.GetLayoutInfo(typeId);
 
             var blockPtr = _memoryManager.Alloc(layoutInfo.AlignedSize);
+            WinApi.RtlZeroMemory(blockPtr, new IntPtr(layoutInfo.AlignedSize));
             var objPtr = blockPtr + _typeIdFieldInfo.Offset;
 
             return objPtr;
@@ -109,7 +112,7 @@ namespace Portable.Gc.Simulator.Impl
 
         IRuntimeCollectionSession IRuntimeContextAccessor.BeginCollection()
         {
-            return new RuntimeCollectionSessionImpl(this.GetRoots, this.StopReleased);
+            return new RuntimeCollectionSessionImpl(() => this.GetRoots().Select(p => p -= _typeIdFieldInfo.Offset).ToArray(), this.StopReleased);
         }
 
         void IRuntimeContextAccessor.RequestStop(Action callback)
@@ -121,6 +124,11 @@ namespace Portable.Gc.Simulator.Impl
         public void Dispose()
         {
             _gcCtx.Dispose();
+        }
+
+        INativeStructureLayoutInfo IRuntimeGlobalAccessor.GetDefaultLayoutInfo()
+        {
+            return _objectLayout;
         }
     }
 }
