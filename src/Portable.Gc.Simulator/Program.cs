@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 using Portable.Gc.Integration;
 using Portable.Gc.Simulator.Impl;
 
@@ -39,7 +40,7 @@ namespace Portable.Gc.Simulator
 
         public override string ToString()
         {
-            return "O#" + this.value.ToString();
+            return "O#" + Convert.ToString(this.value.ToInt64(), 16);
         }
     }
 
@@ -49,7 +50,8 @@ namespace Portable.Gc.Simulator
         {
             if (args.Length > 0)
             {
-                var asm = Assembly.LoadFile(args[0]);
+                var fileInfo = new FileInfo(args[0]);
+                var asm = Assembly.LoadFile(fileInfo.FullName);
                 var gcFabrics = asm.GetCustomAttributes<ExportMemoryManagerAttribute>()
                                    .Select(a => a.FabricType?.GetConstructor(Type.EmptyTypes))
                                    .Where(c => c != null && c.DeclaringType.GetInterfaces().Any(i => i == typeof(IAutoMemoryManagerFabric)))

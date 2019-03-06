@@ -11,7 +11,7 @@ namespace Portable.Gc.Simulator
     {
         public static int AlignTo(this int size, int alignment)
         {
-            return size + (alignment - ((size - 1) % alignment)) - 1;
+            return size == 0 ? 0 : (size + (alignment - ((size - 1) % alignment)) - 1);
         }
 
         public static T CreateDelegate<T>(this MethodInfo method)

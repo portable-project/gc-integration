@@ -84,14 +84,15 @@ namespace Portable.Gc.Simulator.Impl
             return this.AllocImpl(new IntPtr(typeIdValue));
         }
 
-        private ObjPtr AllocImpl(IntPtr typeId)
+        private unsafe ObjPtr AllocImpl(IntPtr typeId)
         {
             var layoutInfo = this.GetLayoutInfo(typeId);
 
             var blockPtr = _memoryManager.Alloc(layoutInfo.AlignedSize);
-            WinApi.RtlZeroMemory(blockPtr.value, new IntPtr(layoutInfo.AlignedSize));
             var objPtr = new ObjPtr(blockPtr.value + _typeIdFieldInfo.Offset);
+            WinApi.RtlZeroMemory(objPtr.value, new IntPtr(layoutInfo.AlignedSize - _typeIdFieldInfo.Offset));
 
+            _typeIdFieldInfo.SetValue(blockPtr, new IntPtr(&typeId));
             return objPtr;
         }
 

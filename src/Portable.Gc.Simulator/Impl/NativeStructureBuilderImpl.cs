@@ -69,6 +69,8 @@ namespace Portable.Gc.Simulator.Impl
                 {
                     if (item.BitIndex.HasValue || item.BitsCount != 0 || item.Size != 0)
                         throw new ArgumentOutOfRangeException();
+
+                    item.Size = IntPtr.Size;
                 }
                 else
                 {
@@ -81,7 +83,9 @@ namespace Portable.Gc.Simulator.Impl
                 var size = item.BitsCount == 0 ? item.Size : (item.BitsCount - 1 / 8) + 1;
                 if (item.Alignment.HasValue)
                     off = off.AlignTo(item.Alignment.Value);
-                if (this.FieldsAligmnent.HasValue)
+                if (this.UseDefaultFieldAlignment)
+                    off = off.AlignTo(size);
+                else if (this.FieldsAligmnent.HasValue)
                     off = off.AlignTo(this.FieldsAligmnent.Value);
 
                 fields.Add(new NativeStructureFieldInfoImpl(_ctx, item.Number, item.Name, off, size, 0, item.Size > 0 ? 0 : item.BitsCount, item.IsReference));

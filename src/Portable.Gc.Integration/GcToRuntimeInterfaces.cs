@@ -84,7 +84,7 @@ namespace Portable.Gc.Integration
 
         public override string ToString()
         {
-            return "O#" + this.value.ToString();
+            return "O#" + Convert.ToString(this.value.ToInt64(), 16);
         }
     }
 }
