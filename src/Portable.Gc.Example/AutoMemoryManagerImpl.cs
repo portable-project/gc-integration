@@ -48,7 +48,7 @@ namespace Portable.Gc.Example
             _underlying = underlying;
         }
 
-        public IntPtr Alloc(int size)
+        public BlockPtr Alloc(int size)
         {
             return _underlying.Alloc(size);
         }
@@ -57,12 +57,12 @@ namespace Portable.Gc.Example
         {
         }
 
-        public void Free(IntPtr blockPtr)
+        public void Free(BlockPtr blockPtr)
         {
             _underlying.Free(blockPtr);
         }
 
-        public void OnWriteRefMember(IntPtr blockPtr, IntPtr refPtr)
+        public void OnWriteRefMember(BlockPtr blockPtr, BlockPtr refPtr)
         {
         }
 

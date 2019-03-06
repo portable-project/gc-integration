@@ -21,12 +21,12 @@ namespace Portable.Gc.Integration
     {
         int RootPrioritiesCount { get; }
 
-        IEnumerable<IntPtr> GetRoots(int rootsPriority);
+        IEnumerable<BlockPtr> GetRoots(int rootsPriority);
     }
 
     public interface IRuntimeGlobalAccessor : IRuntimeContextAccessor
     {
-        INativeStructureLayoutInfo GetLayoutInfo(IntPtr blockPtr);
+        INativeStructureLayoutInfo GetLayoutInfo(BlockPtr blockPtr);
         INativeStructureLayoutInfo GetDefaultLayoutInfo();
     }
 
@@ -52,8 +52,8 @@ namespace Portable.Gc.Integration
 
         bool IsReference { get; }
 
-        void GetValue(IntPtr blockPtr, IntPtr buffer);
-        void SetValue(IntPtr blockPtr, IntPtr buffer);
+        void GetValue(BlockPtr blockPtr, IntPtr buffer);
+        void SetValue(BlockPtr blockPtr, IntPtr buffer);
     }
 
     public interface INativeStructureBuilder

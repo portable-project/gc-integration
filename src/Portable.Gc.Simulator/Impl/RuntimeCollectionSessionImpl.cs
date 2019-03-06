@@ -10,12 +10,12 @@ namespace Portable.Gc.Simulator.Impl
 
     internal class RuntimeCollectionSessionImpl : IRuntimeCollectionSession
     {
-        private readonly Func<IntPtr[]> _getRoots;
+        private readonly Func<BlockPtr[]> _getRoots;
         private readonly Action _stopReleased;
 
         public int RootPrioritiesCount { get; private set; }
 
-        public RuntimeCollectionSessionImpl(Func<IntPtr[]> getRoots, Action stopReleased)
+        public RuntimeCollectionSessionImpl(Func<BlockPtr[]> getRoots, Action stopReleased)
         {
             this.RootPrioritiesCount = 1;
 
@@ -23,7 +23,7 @@ namespace Portable.Gc.Simulator.Impl
             _stopReleased = stopReleased;
         }
 
-        public IEnumerable<IntPtr> GetRoots(int rootsPriority)
+        public IEnumerable<BlockPtr> GetRoots(int rootsPriority)
         {
             return _getRoots();
         }

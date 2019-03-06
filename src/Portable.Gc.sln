@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.28307.329
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Portable.Gc.Integration", "Portable.Gc.Integration\Portable.Gc.Integration.csproj", "{CE065326-ABC3-4124-ABE9-38B07AEA1FE8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Portable.Gc.Simulator", "..\Portable.Gc.Simulator\Portable.Gc.Simulator.csproj", "{B05D827C-6FE7-4963-9262-851B01081A8B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Portable.Gc.Simulator", "Portable.Gc.Simulator\Portable.Gc.Simulator.csproj", "{B05D827C-6FE7-4963-9262-851B01081A8B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Portable.Gc.Visualizer", "Portable.Gc.Visualizer\Portable.Gc.Visualizer.csproj", "{437074F6-DE41-4183-B1CE-0C17594263F5}"
 EndProject

@@ -8,7 +8,7 @@ using Portable.Gc.Integration;
 
 namespace Portable.Gc.Simulator.Impl
 {
-    class SystemMemoryManagerFabricImpl : IMemoryManagerFabric
+    internal class SystemMemoryManagerFabricImpl : IMemoryManagerFabric
     {
         public string Name { get { return "system"; } }
         public Version Version { get { return new Version("1.0"); } }
@@ -19,29 +19,28 @@ namespace Portable.Gc.Simulator.Impl
         }
     }
 
-    class SystemMemoryManagerImpl : IMemoryManager
+    internal class SystemMemoryManagerImpl : IMemoryManager
     {
-        readonly Dictionary<IntPtr, int> _allocations = new Dictionary<IntPtr, int>();
-
-        int _counter = 0;
+        private readonly Dictionary<IntPtr, int> _allocations = new Dictionary<IntPtr, int>();
+        private int _counter = 0;
 
         public SystemMemoryManagerImpl()
         {
         }
 
-        public IntPtr Alloc(int size)
+        public BlockPtr Alloc(int size)
         {
             var ptr = Marshal.AllocHGlobal(size);
 
             _allocations.Add(ptr, _counter++);
 
-            return ptr;
+            return new BlockPtr(ptr);
         }
 
-        public void Free(IntPtr blockPtr)
+        public void Free(BlockPtr blockPtr)
         {
-            _allocations.Remove(blockPtr);
-            Marshal.FreeHGlobal(blockPtr);
+            _allocations.Remove(blockPtr.value);
+            Marshal.FreeHGlobal(blockPtr.value);
         }
 
         public void Dispose()

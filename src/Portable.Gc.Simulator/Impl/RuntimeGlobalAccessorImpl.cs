@@ -20,7 +20,7 @@ namespace Portable.Gc.Simulator.Impl
 
         public event Action StopRequested = delegate { };
         public event Action StopReleased = delegate { };
-        public event Func<IntPtr[]> GetRoots = delegate { return new IntPtr[0]; };
+        public event Func<ObjPtr[]> GetRoots = delegate { return new ObjPtr[0]; };
 
         int INativeLayoutContext.ObjRefDiff { get { return _typeIdFieldInfo.Offset; } }
 
@@ -78,19 +78,19 @@ namespace Portable.Gc.Simulator.Impl
             }
         }
 
-        public IntPtr AllocRandomObj(Random rnd)
+        public ObjPtr AllocRandomObj(Random rnd)
         {
             var typeIdValue = rnd.Next(0, _knownTypes.Count);
             return this.AllocImpl(new IntPtr(typeIdValue));
         }
 
-        private IntPtr AllocImpl(IntPtr typeId)
+        private ObjPtr AllocImpl(IntPtr typeId)
         {
             var layoutInfo = this.GetLayoutInfo(typeId);
 
             var blockPtr = _memoryManager.Alloc(layoutInfo.AlignedSize);
-            WinApi.RtlZeroMemory(blockPtr, new IntPtr(layoutInfo.AlignedSize));
-            var objPtr = blockPtr + _typeIdFieldInfo.Offset;
+            WinApi.RtlZeroMemory(blockPtr.value, new IntPtr(layoutInfo.AlignedSize));
+            var objPtr = new ObjPtr(blockPtr.value + _typeIdFieldInfo.Offset);
 
             return objPtr;
         }
@@ -103,7 +103,7 @@ namespace Portable.Gc.Simulator.Impl
             return layoutInfo;
         }
 
-        INativeStructureLayoutInfo IRuntimeGlobalAccessor.GetLayoutInfo(IntPtr blockPtr)
+        INativeStructureLayoutInfo IRuntimeGlobalAccessor.GetLayoutInfo(BlockPtr blockPtr)
         {
             var ptr = stackalloc IntPtr[1];
             _typeIdFieldInfo.GetValue(blockPtr, new IntPtr(ptr));
@@ -112,7 +112,7 @@ namespace Portable.Gc.Simulator.Impl
 
         IRuntimeCollectionSession IRuntimeContextAccessor.BeginCollection()
         {
-            return new RuntimeCollectionSessionImpl(() => this.GetRoots().Select(p => p -= _typeIdFieldInfo.Offset).ToArray(), this.StopReleased);
+            return new RuntimeCollectionSessionImpl(() => this.GetRoots().Select(p => new BlockPtr(p.value - _typeIdFieldInfo.Offset)).ToArray(), this.StopReleased);
         }
 
         void IRuntimeContextAccessor.RequestStop(Action callback)

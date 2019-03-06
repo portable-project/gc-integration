@@ -63,7 +63,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\Portable.Gc.Integration\Portable.Gc.Integration.csproj">
+    <ProjectReference Include="..\Portable.Gc.Integration\Portable.Gc.Integration.csproj">
       <Project>{ce065326-abc3-4124-abe9-38b07aea1fe8}</Project>
       <Name>Portable.Gc.Integration</Name>
     </ProjectReference>

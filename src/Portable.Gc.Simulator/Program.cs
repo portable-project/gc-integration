@@ -10,6 +10,39 @@ using Portable.Gc.Simulator.Impl;
 
 namespace Portable.Gc.Simulator
 {
+
+    public struct ObjPtr : IComparable<ObjPtr>
+    {
+        public readonly IntPtr value;
+
+        public readonly static ObjPtr Zero = new ObjPtr(IntPtr.Zero);
+
+        public ObjPtr(IntPtr value)
+        {
+            this.value = value;
+        }
+
+        public int CompareTo(ObjPtr other)
+        {
+            return this.value.ToInt64().CompareTo(other.value.ToInt64());
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is ObjPtr other ? this.value.Equals(other.value) : false;
+        }
+
+        public override int GetHashCode()
+        {
+            return this.value.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return "O#" + this.value.ToString();
+        }
+    }
+
     internal class Program
     {
         private static void Main(string[] args)

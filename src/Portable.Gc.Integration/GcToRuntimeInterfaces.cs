@@ -16,8 +16,8 @@ namespace Portable.Gc.Integration
 
     public interface IMemoryManager : IDisposable
     {
-        IntPtr Alloc(int size);
-        void Free(IntPtr blockPtr);
+        BlockPtr Alloc(int size);
+        void Free(BlockPtr blockPtr);
     }
 
     public interface IAutoMemoryManagerFabric
@@ -39,7 +39,7 @@ namespace Portable.Gc.Integration
 
     public interface IAutoMemoryManager : IMemoryManager
     {
-        void OnWriteRefMember(IntPtr blockPtr, IntPtr refPtr);
+        void OnWriteRefMember(BlockPtr blockPtr, BlockPtr refPtr);
 
         void ForceCollection(int generation);
     }
@@ -56,5 +56,35 @@ namespace Portable.Gc.Integration
 
         // called by runtime to inject gc-related fields into the object structure layout
         void AugmentObjectLayout(INativeStructureBuilder structureBuilder);
+    }
+
+    public struct BlockPtr : IComparable<BlockPtr>
+    {
+        public readonly IntPtr value;
+
+        public BlockPtr(IntPtr value)
+        {
+            this.value = value;
+        }
+
+        public int CompareTo(BlockPtr other)
+        {
+            return this.value.ToInt64().CompareTo(other.value.ToInt64());
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is BlockPtr other ? this.value.Equals(other.value) : false;
+        }
+
+        public override int GetHashCode()
+        {
+            return this.value.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return "O#" + this.value.ToString();
+        }
     }
 }

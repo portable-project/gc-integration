@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Portable.Gc.Integration;
 using Portable.Gc.Simulator.Impl;
 
 namespace Portable.Gc.Simulator
@@ -15,7 +16,7 @@ namespace Portable.Gc.Simulator
 
     internal interface IMutatorContext
     {
-        HashSet<IntPtr> Statics { get; }
+        HashSet<ObjPtr> Statics { get; }
         RuntimeGlobalAccessorImpl Runtime { get; }
     }
 
@@ -23,10 +24,10 @@ namespace Portable.Gc.Simulator
     internal class MutatorContext : IMutatorContext
     {
         private readonly RuntimeGlobalAccessorImpl _runtime;
-        private readonly HashSet<IntPtr> _statics = new HashSet<IntPtr>();
+        private readonly HashSet<ObjPtr> _statics = new HashSet<ObjPtr>();
         private readonly List<Mutator> _mutators = new List<Mutator>();
 
-        HashSet<IntPtr> IMutatorContext.Statics { get { return _statics; } }
+        HashSet<ObjPtr> IMutatorContext.Statics { get { return _statics; } }
         RuntimeGlobalAccessorImpl IMutatorContext.Runtime { get { return _runtime; } }
 
         public MutatorContext(RuntimeGlobalAccessorImpl runtime)
@@ -34,7 +35,7 @@ namespace Portable.Gc.Simulator
             _runtime = runtime;
         }
 
-        public IEnumerable<IntPtr> GetRoots()
+        public IEnumerable<ObjPtr> GetRoots()
         {
             return _mutators.SelectMany(m => m.GetRoots()).Concat(_statics);
         }
@@ -55,14 +56,14 @@ namespace Portable.Gc.Simulator
             public LocalCtxFrame Next { get; private set; }
 
             public int Depth { get; private set; }
-            public HashSet<IntPtr> Locals { get; private set; }
+            public HashSet<ObjPtr> Locals { get; private set; }
 
             public LocalCtxFrame()
             {
                 this.Prev = null;
                 this.Next = null;
                 this.Depth = 0;
-                this.Locals = new HashSet<IntPtr>();
+                this.Locals = new HashSet<ObjPtr>();
             }
 
             public LocalCtxFrame(LocalCtxFrame prev)
@@ -70,7 +71,7 @@ namespace Portable.Gc.Simulator
                 this.Prev = prev;
                 this.Next = null;
                 this.Depth = prev.Depth + 1;
-                this.Locals = new HashSet<IntPtr>();
+                this.Locals = new HashSet<ObjPtr>();
             }
 
             public LocalCtxFrame CreateNext()
@@ -101,7 +102,7 @@ namespace Portable.Gc.Simulator
             _rnd = new Random(seed ?? Environment.TickCount);
         }
 
-        public IEnumerable<IntPtr> GetRoots()
+        public IEnumerable<ObjPtr> GetRoots()
         {
             return this.GetFrames().SelectMany(f => f.Locals);
         }
@@ -112,7 +113,7 @@ namespace Portable.Gc.Simulator
                 yield return frame;
         }
 
-        public IEnumerable<(MutatorActionKind, IntPtr)> DoWork()
+        public IEnumerable<(MutatorActionKind, ObjPtr)> DoWork()
         {
             for (var frame = _root; ;)
             {
@@ -126,25 +127,24 @@ namespace Portable.Gc.Simulator
             }
         }
 
-        private IntPtr PerformAction(MutatorActionKind actionKind, ref LocalCtxFrame frame)
+        private ObjPtr PerformAction(MutatorActionKind actionKind, ref LocalCtxFrame frame)
         {
-            IntPtr ptr;
+            ObjPtr ptr;
 
             switch (actionKind)
             {
                 case MutatorActionKind.None:
-                    ptr = IntPtr.Zero;
+                    ptr = ObjPtr.Zero;
                     break;
                 case MutatorActionKind.Call:
                     frame = frame.CreateNext();
-                    ptr = IntPtr.Zero;
+                    ptr = ObjPtr.Zero;
                     break;
                 case MutatorActionKind.Return:
                     frame = frame.ResumePrev();
-                    ptr = IntPtr.Zero;
+                    ptr = ObjPtr.Zero;
                     break;
                 case MutatorActionKind.Newobj:
-                    cnt1++;
                     frame.Locals.Add(ptr = _ctx.Runtime.AllocRandomObj(_rnd));
                     break;
                 case MutatorActionKind.PutStatic:
@@ -154,7 +154,7 @@ namespace Portable.Gc.Simulator
                             if (frame.Locals.Count > 0)
                                 _ctx.Statics.Add(ptr = frame.Locals.Skip(_rnd.Next(0, frame.Locals.Count)).First());
                             else
-                                ptr = IntPtr.Zero;
+                                ptr = ObjPtr.Zero;
                         }
                     }
                     break;
@@ -169,7 +169,7 @@ namespace Portable.Gc.Simulator
                             }
                             else
                             {
-                                ptr = IntPtr.Zero;
+                                ptr = ObjPtr.Zero;
                             }
                         }
                     }
@@ -181,15 +181,14 @@ namespace Portable.Gc.Simulator
                             if (_ctx.Statics.Count > 0)
                                 _ctx.Statics.Remove(ptr = _ctx.Statics.Skip(_rnd.Next(0, _ctx.Statics.Count)).First());
                             else
-                                ptr = IntPtr.Zero;
+                                ptr = ObjPtr.Zero;
                         }
                     }
                     break;
                 case MutatorActionKind.PutRef:
                 case MutatorActionKind.ChangeRef:
                 case MutatorActionKind.EraseRef:
-                    ptr = IntPtr.Zero;
-                    cnt2++;
+                    ptr = ObjPtr.Zero;
                     break; // TODO: operations with reference fields
                 default:
                     throw new NotImplementedException("Unknown action " + actionKind);
@@ -197,7 +196,5 @@ namespace Portable.Gc.Simulator
 
             return ptr;
         }
-
-        static int cnt1,cnt2;
     }
 }

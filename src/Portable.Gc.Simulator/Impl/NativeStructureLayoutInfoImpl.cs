@@ -58,11 +58,11 @@ namespace Portable.Gc.Simulator.Impl
             this.IsReference = isReference;
         }
 
-        public unsafe void GetValue(IntPtr blockPtr, IntPtr buffer)
+        public unsafe void GetValue(BlockPtr blockPtr, IntPtr buffer)
         {
             if (this.BitIndex == 0)
             {
-                WinApi.CopyMemory(buffer, blockPtr + this.Offset, this.Size);
+                WinApi.CopyMemory(buffer, blockPtr.value + this.Offset, this.Size);
 
                 if(this.IsReference)
                 {
@@ -73,7 +73,7 @@ namespace Portable.Gc.Simulator.Impl
             else
             {
                 var buff = new byte[this.Size];
-                Marshal.Copy(blockPtr + this.Offset, buff, 0, this.Size);
+                Marshal.Copy(blockPtr.value + this.Offset, buff, 0, this.Size);
                 var rawValue = new BigInteger(buff);
                 var valueMask = BigInteger.Pow(2, this.BitsCount) - 1;
 
@@ -84,21 +84,21 @@ namespace Portable.Gc.Simulator.Impl
             }
         }
 
-        public unsafe void SetValue(IntPtr blockPtr, IntPtr buffer)
+        public unsafe void SetValue(BlockPtr blockPtr, IntPtr buffer)
         {
             if (this.BitIndex == 0)
             {
-                WinApi.CopyMemory(blockPtr + this.Offset, buffer, this.Size);
+                WinApi.CopyMemory(blockPtr.value + this.Offset, buffer, this.Size);
                 if (this.IsReference)
                 {
-                    IntPtr* p = (IntPtr*)(blockPtr + this.Offset).ToPointer();
+                    IntPtr* p = (IntPtr*)(blockPtr.value + this.Offset).ToPointer();
                     p[0] += _ctx.ObjRefDiff;
                 }
             }
             else
             {
                 var buff = new byte[this.Size];
-                Marshal.Copy(blockPtr + this.Offset, buff, 0, this.Size);
+                Marshal.Copy(blockPtr.value + this.Offset, buff, 0, this.Size);
                 var rawValue = new BigInteger(buff);
                 var valueMask = BigInteger.Pow(2, this.BitsCount) - 1;
 
@@ -108,7 +108,7 @@ namespace Portable.Gc.Simulator.Impl
 
                 rawValue = (rawValue ^ (rawValue & (valueMask << this.BitIndex))) | (value << this.BitIndex);
                 buff = rawValue.ToByteArray();
-                Marshal.Copy(buff, 0, blockPtr + this.Offset, this.Size);
+                Marshal.Copy(buff, 0, blockPtr.value + this.Offset, this.Size);
             }
         }
     }
