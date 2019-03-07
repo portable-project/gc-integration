@@ -9,7 +9,7 @@ using Portable.Gc.Integration;
 
 namespace Portable.Gc.Simulator.Impl
 {
-    interface INativeLayoutContext
+    internal interface INativeLayoutContext
     {
         int ObjRefDiff { get; }
     }
@@ -43,7 +43,7 @@ namespace Portable.Gc.Simulator.Impl
         public int BitsCount { get; }
         public bool IsReference { get; }
 
-        readonly INativeLayoutContext _ctx;
+        private readonly INativeLayoutContext _ctx;
 
         public NativeStructureFieldInfoImpl(INativeLayoutContext ctx, int number, string name, int offset, int size, int bitIndex, int bitsCount, bool isReference)
         {
@@ -64,10 +64,11 @@ namespace Portable.Gc.Simulator.Impl
             {
                 WinApi.CopyMemory(buffer, blockPtr.value + this.Offset, this.Size);
 
-                if(this.IsReference)
+                if (this.IsReference)
                 {
                     IntPtr* p = (IntPtr*)buffer.ToPointer();
-                    p[0] -= _ctx.ObjRefDiff;
+                    if (p[0] != IntPtr.Zero)
+                        p[0] -= _ctx.ObjRefDiff;
                 }
             }
             else
@@ -92,7 +93,9 @@ namespace Portable.Gc.Simulator.Impl
                 if (this.IsReference)
                 {
                     IntPtr* p = (IntPtr*)(blockPtr.value + this.Offset).ToPointer();
-                    p[0] += _ctx.ObjRefDiff;
+
+                    if (p[0] != IntPtr.Zero)
+                        p[0] += _ctx.ObjRefDiff;
                 }
             }
             else
