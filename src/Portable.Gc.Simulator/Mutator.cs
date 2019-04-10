@@ -48,7 +48,7 @@ namespace Portable.Gc.Simulator
         }
     }
 
-    internal class Mutator
+    internal class Mutator : IDisposable
     {
         private class LocalCtxFrame
         {
@@ -93,6 +93,7 @@ namespace Portable.Gc.Simulator
         private readonly Random _rnd;
 
         private readonly LocalCtxFrame _root = new LocalCtxFrame();
+        private readonly RefBuffer _refBuffer = new RefBuffer();
 
         public Mutator(IMutatorContext ctx, int? seed, MutatorParameters parameters)
         {
@@ -120,7 +121,7 @@ namespace Portable.Gc.Simulator
                 var probabilities = _params.GetParameters(frame.Depth);
                 var actions = probabilities.GetActionKind(_params.Mode, _rnd);
 
-                foreach (var actionEntry in actions.GetEnumValues()
+                foreach (var actionEntry in actions.GetEnumValues().Except(new[] { MutatorActionKind.None })
                                                    .Where(a => actions.HasFlag(a))
                                                    .Select(a => (a, this.PerformAction(a, ref frame))))
                     yield return actionEntry;
@@ -186,15 +187,102 @@ namespace Portable.Gc.Simulator
                     }
                     break;
                 case MutatorActionKind.PutRef:
+                    {
+                        lock (_ctx.Statics)
+                        {
+                            ptr = this.SelectObject(frame);
+
+                            if (ptr.value != IntPtr.Zero)
+                            {
+                                _refBuffer.Value = this.SelectObject(frame, useStatics: false).value;
+
+                                var refs = _ctx.Runtime.GetRefs(ptr);
+                                var field = refs.FirstOrDefault(f => { f.GetValue(_ctx.Runtime.ObjToBlock(ptr), _refBuffer.buffPtr); return _refBuffer.Value == IntPtr.Zero; });
+
+                                if (field != null)
+                                {
+                                    field.SetValue(_ctx.Runtime.ObjToBlock(ptr), _refBuffer.buffPtr);
+                                }
+                                else
+                                {
+                                    refs[_rnd.Next(0, refs.Length)].SetValue(_ctx.Runtime.ObjToBlock(ptr), _refBuffer.buffPtr);
+                                }
+                            }
+                        }
+                    }
+                    break;
                 case MutatorActionKind.ChangeRef:
+                    {
+                        lock (_ctx.Statics)
+                        {
+                            ptr = this.SelectObject(frame);
+
+                            if (ptr.value != IntPtr.Zero)
+                            {
+                                _refBuffer.Value = this.SelectObject(frame, useStatics: false).value;
+
+                                var refs = _ctx.Runtime.GetRefs(ptr);
+                                refs[_rnd.Next(0, refs.Length)].SetValue(_ctx.Runtime.ObjToBlock(ptr), _refBuffer.buffPtr);
+                            }
+                        }
+                    }
+                    break;
                 case MutatorActionKind.EraseRef:
-                    ptr = ObjPtr.Zero;
-                    break; // TODO: operations with reference fields
+                    {
+                        lock (_ctx.Statics)
+                        {
+                            ptr = this.SelectObject(frame);
+
+                            if (ptr.value != IntPtr.Zero)
+                            {
+                                var refs = _ctx.Runtime.GetRefs(ptr);
+                                var field = refs.FirstOrDefault(f => { f.GetValue(_ctx.Runtime.ObjToBlock(ptr), _refBuffer.buffPtr); return _refBuffer.Value != IntPtr.Zero; });
+
+                                _refBuffer.Value = IntPtr.Zero;
+                                if (field != null)
+                                    field.SetValue(_ctx.Runtime.ObjToBlock(ptr), _refBuffer.buffPtr);
+                            }
+                        }
+                    }
+                    break;
                 default:
                     throw new NotImplementedException("Unknown action " + actionKind);
             }
 
             return ptr;
+        }
+
+        private ObjPtr SelectObject(LocalCtxFrame frame, bool useStatics = true)
+        {
+            if (_rnd.Next(100) > 50 && useStatics)
+            {
+                if (_ctx.Statics.Count > 0)
+                    return this.SelectDeepObject(_ctx.Statics.Skip(_rnd.Next(0, _ctx.Statics.Count)).First());
+                else
+                    return ObjPtr.Zero;
+            }
+            else
+            {
+                if (frame.Locals.Count > 0)
+                    return this.SelectDeepObject(frame.Locals.Skip(_rnd.Next(0, frame.Locals.Count)).First());
+                else
+                    return ObjPtr.Zero;
+            }
+        }
+
+        private ObjPtr SelectDeepObject(ObjPtr ptr, int depth = 0)
+        {
+            if (depth > 100 || _rnd.Next(100) > 50)
+                return ptr;
+
+            var refs = _ctx.Runtime.GetRefs(ptr);
+            refs[_rnd.Next(0, refs.Length)].GetValue(_ctx.Runtime.ObjToBlock(ptr), _refBuffer.buffPtr);
+            return new ObjPtr(_refBuffer.Value);
+        }
+
+        public void Dispose()
+        {
+            _refBuffer.Dispose();
         }
     }
 }

@@ -1,12 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Portable.Gc.Integration;
 
 namespace Portable.Gc.Simulator.Impl
 {
+    internal unsafe class RefBuffer : IDisposable
+    {
+        public readonly IntPtr buffPtr;
+
+        public IntPtr Value
+        {
+            get
+            {
+                return Marshal.ReadIntPtr(this.buffPtr);
+            }
+
+            set
+            {
+                Marshal.WriteIntPtr(this.buffPtr, IntPtr.Zero);
+            }
+        }
+
+        public RefBuffer()
+        {
+            this.buffPtr = Marshal.AllocHGlobal(IntPtr.Size);
+            this.Value = IntPtr.Zero;
+        }
+
+        public void Dispose()
+        {
+            Marshal.FreeHGlobal(this.buffPtr);
+        }
+    }
+
     internal unsafe class RuntimeGlobalAccessorImpl : IRuntimeGlobalAccessor, INativeLayoutContext, IDisposable
     {
         public bool IsRunning { get; }
@@ -57,21 +87,29 @@ namespace Portable.Gc.Simulator.Impl
             var count = 1000;
             for (int i = 1; i < count; i++)
             {
-                var stb = new NativeStructureBuilderImpl(this, "r" + i, objectStb);
+                var stb = new NativeStructureBuilderImpl(this, "t" + i, objectStb);
 
                 var fieldsCount = rnd.Next(0, 40);
+                var hasRefs = false;
                 for (int j = 0; j < fieldsCount; j++)
                 {
-                    var f = stb.DefineField("r" + i + "f" + j);
+                    var f = stb.DefineField("t" + i + "f" + j);
 
                     if (rnd.Next(0, 100) < 50)
                     {
                         f.IsReference = true;
+                        hasRefs = true;
                     }
                     else
                     {
                         f.Size = fieldSize[rnd.Next(0, fieldSize.Length)];
                     }
+                }
+
+                if (!hasRefs)
+                {
+                    var f = stb.DefineField("t" + i + "f" + fieldsCount);
+                    f.IsReference = true;
                 }
 
                 _knownTypes.Add(new IntPtr(_knownTypes.Count), stb.Complete());
@@ -80,7 +118,7 @@ namespace Portable.Gc.Simulator.Impl
 
         public ObjPtr AllocRandomObj(Random rnd)
         {
-            var typeIdValue = rnd.Next(0, _knownTypes.Count);
+            var typeIdValue = rnd.Next(1, _knownTypes.Count);
             return this.AllocImpl(new IntPtr(typeIdValue));
         }
 
@@ -102,6 +140,23 @@ namespace Portable.Gc.Simulator.Impl
                 throw new InvalidOperationException("Unknown block typeId " + typeId);
 
             return layoutInfo;
+        }
+
+        public BlockPtr ObjToBlock(ObjPtr ptr)
+        {
+            return new BlockPtr(ptr.value - _typeIdFieldInfo.Offset);
+        }
+
+        public ObjPtr BlockToObj(BlockPtr ptr)
+        {
+            return new ObjPtr(ptr.value + _typeIdFieldInfo.Offset);
+        }
+
+        public INativeStructureFieldInfo[] GetRefs(ObjPtr obj)
+        {
+            var ptr = stackalloc IntPtr[1];
+            _typeIdFieldInfo.GetValue(this.ObjToBlock(obj), new IntPtr(ptr));
+            return this.GetLayoutInfo(ptr[0]).Fields.Where(f => f.IsReference).ToArray();
         }
 
         INativeStructureLayoutInfo IRuntimeGlobalAccessor.GetLayoutInfo(BlockPtr blockPtr)

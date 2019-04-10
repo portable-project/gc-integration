@@ -114,8 +114,8 @@ namespace Portable.Gc.Simulator
                 // |   |    |     |   |   |   |   |   changeRefProbability, 
                 // |   |    |     |   |   |   |   |   |   eraseRefProbabilty
                 // |   |    |     |   |   |   |   |   |   |
-                { 0,   100, 0,    75, 10, 10, 10, 50, 50, 50 },
-                { 100, 0,   100,  75, 10, 10, 10, 50, 50, 50 }
+                { 0,   100, 0,    75, 10, 10, 10, 80, 80, 80 },
+                { 100, 0,   100,  75, 10, 10, 10, 80, 80, 80 }
             };
             p.Mode = MutatorParametersModeKind.Sequence;
 

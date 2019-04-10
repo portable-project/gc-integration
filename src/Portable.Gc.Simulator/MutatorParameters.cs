@@ -120,6 +120,15 @@ namespace Portable.Gc.Simulator
 
         public MutatorActionKind GetActionKind(MutatorParametersModeKind mode, Random rnd)
         {
+            var act = this.GetActionKindImpl(mode, rnd);
+            while (act == MutatorActionKind.None)
+                act = this.GetActionKindImpl(mode, rnd);
+
+            return act;
+        }
+
+        private MutatorActionKind GetActionKindImpl(MutatorParametersModeKind mode, Random rnd)
+        {
             var result = MutatorActionKind.None;
 
             switch (mode)
