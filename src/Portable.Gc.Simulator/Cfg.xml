@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<GcSimulatorConfiguration xmlns="GcSimulatorConfiguration">
+
+  <Probabilities Mode="Flat">
+    <Entry StackDepth="0"   Call="20" Return="0"  Newobj="20" PutStatic="10" ChangeStatic="10" EraseStatic="10" PutRef="10" ChangeRef="10" EraseRef="10" />
+    <Entry StackDepth="100" Call="10" Return="10" Newobj="20" PutStatic="10" ChangeStatic="10" EraseStatic="10" PutRef="10" ChangeRef="10" EraseRef="10" />
+  </Probabilities>
+
+</GcSimulatorConfiguration>

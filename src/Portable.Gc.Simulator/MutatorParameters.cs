@@ -189,6 +189,11 @@ namespace Portable.Gc.Simulator
             return result;
         }
 
+        public void SetValue(MutatorActionKind actionKind, int value)
+        {
+            _knownParams.FirstOrDefault(p => p.actionKind == actionKind).setter(this, value);
+        }
+
         public int[] GetValues()
         {
             return _knownParams.Select(p => p.getter(this)).ToArray();
@@ -204,7 +209,11 @@ namespace Portable.Gc.Simulator
         public void Add(int stackDepth, int callProbability, int returnProbability, int newobjProbability, int putStatic, int changeStatic, int eraseStatic, int putRefProbability, int changeRefProbability, int eraseRefProbabilty)
         {
             var newItem = new MutatorParametersEntry(stackDepth, callProbability, returnProbability, newobjProbability, putStatic, changeStatic, eraseStatic, putRefProbability, changeRefProbability, eraseRefProbabilty);
+            this.Add(newItem);
+        }
 
+        public void Add(MutatorParametersEntry newItem)
+        {
             var index = _items.BinarySearch(newItem, Comparer<MutatorParametersEntry>.Create((a, b) => a.StackDepth.CompareTo(b.StackDepth)));
             if (index < 0)
                 index = ~index;

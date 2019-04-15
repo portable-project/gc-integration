@@ -46,7 +46,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandLineAnalyzer.cs" />
+    <Compile Include="CommandLineArgs.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="GcSimulatorCfg.cs">
+      <DependentUpon>GcSimulatorCfg.xsd</DependentUpon>
+    </Compile>
     <Compile Include="Impl\NativeStructureBuilderImpl.cs" />
     <Compile Include="Impl\NativeStructureLayoutInfoImpl.cs" />
     <Compile Include="Impl\RuntimeCollectionSessionImpl.cs" />
@@ -61,12 +66,18 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="GcSimulatorCfg.xsd">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Portable.Gc.Integration\Portable.Gc.Integration.csproj">
       <Project>{ce065326-abc3-4124-abe9-38b07aea1fe8}</Project>
       <Name>Portable.Gc.Integration</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Cfg.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

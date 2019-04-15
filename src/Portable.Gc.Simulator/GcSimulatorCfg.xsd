@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="GcSimulatorConfiguration" targetNamespace="GcSimulatorConfiguration" elementFormDefault="qualified"
+           xmlns="GcSimulatorConfiguration" xmlns:mstns="GcSimulatorConfiguration" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!--
+  
+    xsd /c GcSimulatorCfg.xsd
+    
+  -->
+
+  <xs:element name="GcSimulatorConfiguration" type="GcSimulatorConfigurationType" />
+
+  <xs:complexType name="GcSimulatorConfigurationType">
+    <xs:sequence>
+      <xs:element name="Probabilities" type="GcSimulatorConfigurationProbabilitiesType" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="GcSimulatorConfigurationProbabilitiesType">
+    <xs:choice minOccurs="2" maxOccurs="unbounded">
+      <xs:element name="Entry" type="GcSimulatorConfigurationProbabilitiesEntryType" />
+    </xs:choice>
+    <xs:attribute name="Mode" type="GcSimulatorConfigurationProbabilitiesModeKindType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="GcSimulatorConfigurationProbabilitiesEntryType">
+    <xs:attribute name="StackDepth" type="xs:int" use="required" />
+    <xs:anyAttribute processContents="lax" />
+  </xs:complexType>
+
+  <xs:simpleType name="GcSimulatorConfigurationProbabilitiesModeKindType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Flat" />
+      <xs:enumeration value="Override" />
+      <xs:enumeration value="Sequence" />
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
