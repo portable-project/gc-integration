@@ -194,7 +194,7 @@ namespace Portable.Gc.Simulator
 
                             if (ptr.value != IntPtr.Zero)
                             {
-                                _refBuffer.Value = this.SelectObject(frame, useStatics: false).value;
+                                _refBuffer.Value = _ctx.Runtime.ObjToBlock(this.SelectObject(frame, useStatics: false)).value;
 
                                 var refs = _ctx.Runtime.GetRefs(ptr);
                                 var field = refs.FirstOrDefault(f => { f.GetValue(_ctx.Runtime.ObjToBlock(ptr), _refBuffer.buffPtr); return _refBuffer.Value == IntPtr.Zero; });
@@ -219,7 +219,7 @@ namespace Portable.Gc.Simulator
 
                             if (ptr.value != IntPtr.Zero)
                             {
-                                _refBuffer.Value = this.SelectObject(frame, useStatics: false).value;
+                                _refBuffer.Value = _ctx.Runtime.ObjToBlock(this.SelectObject(frame, useStatics: false)).value;
 
                                 var refs = _ctx.Runtime.GetRefs(ptr);
                                 refs[_rnd.Next(0, refs.Length)].SetValue(_ctx.Runtime.ObjToBlock(ptr), _refBuffer.buffPtr);
@@ -254,30 +254,39 @@ namespace Portable.Gc.Simulator
 
         private ObjPtr SelectObject(LocalCtxFrame frame, bool useStatics = true)
         {
-            if (_rnd.Next(100) > 50 && useStatics)
-            {
-                if (_ctx.Statics.Count > 0)
-                    return this.SelectDeepObject(_ctx.Statics.Skip(_rnd.Next(0, _ctx.Statics.Count)).First());
-                else
-                    return ObjPtr.Zero;
-            }
+            List<ObjPtr> ptrs;
+            if (useStatics) ptrs = frame.Locals.Concat(_ctx.Statics).Distinct().ToList();
+            else ptrs = frame.Locals.ToList();
+
+            if (ptrs.Count == 0)
+                return ObjPtr.Zero;
             else
-            {
-                if (frame.Locals.Count > 0)
-                    return this.SelectDeepObject(frame.Locals.Skip(_rnd.Next(0, frame.Locals.Count)).First());
-                else
-                    return ObjPtr.Zero;
-            }
+                return this.SelectDeepObject(ptrs[_rnd.Next(0, ptrs.Count)]);
+
+            //if (_rnd.Next(100) > 50 && useStatics)
+            //{
+            //    if (_ctx.Statics.Count > 0)
+            //        return this.SelectDeepObject(_ctx.Statics.Skip(_rnd.Next(0, _ctx.Statics.Count)).First());
+            //    else
+            //        return ObjPtr.Zero;
+            //}
+            //else
+            //{
+            //    if (frame.Locals.Count > 0)
+            //        return this.SelectDeepObject(frame.Locals.Skip(_rnd.Next(0, frame.Locals.Count)).First());
+            //    else
+            //        return ObjPtr.Zero;
+            //}
         }
 
         private ObjPtr SelectDeepObject(ObjPtr ptr, int depth = 0)
         {
-            if (depth > 100 || _rnd.Next(100) > 50)
+            if (depth > 100)// || _rnd.Next(100) > 50)
                 return ptr;
 
             var refs = _ctx.Runtime.GetRefs(ptr);
             refs[_rnd.Next(0, refs.Length)].GetValue(_ctx.Runtime.ObjToBlock(ptr), _refBuffer.buffPtr);
-            return new ObjPtr(_refBuffer.Value);
+            return _refBuffer.Value == IntPtr.Zero ? ptr : this.SelectDeepObject(_ctx.Runtime.BlockToObj(new BlockPtr(_refBuffer.Value)), depth + 1);
         }
 
         public void Dispose()

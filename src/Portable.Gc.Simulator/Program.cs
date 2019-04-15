@@ -102,6 +102,23 @@ namespace Portable.Gc.Simulator
         {
             Console.WriteLine("Using GC " + gcFabric.Name);
 
+            //var p = new MutatorParameters() {
+            //    // stackDepth, 
+            //    // |   callProbability, 
+            //    // |   |    returnProbability, 
+            //    // |   |    |     newobjProbability, 
+            //    // |   |    |     |   putStatic, 
+            //    // |   |    |     |   |   changeStatic, 
+            //    // |   |    |     |   |   |   eraseStatic, 
+            //    // |   |    |     |   |   |   |   putRefProbability, 
+            //    // |   |    |     |   |   |   |   |   changeRefProbability, 
+            //    // |   |    |     |   |   |   |   |   |   eraseRefProbabilty
+            //    // |   |    |     |   |   |   |   |   |   |
+            //    { 0,   100, 0,    75, 10, 10, 10, 90, 90, 90 },
+            //    { 100, 100, 100,  75, 10, 10, 10, 90, 90, 90 }
+            //};
+            //p.Mode = MutatorParametersModeKind.Sequence;
+
             var p = new MutatorParameters() {
                 // stackDepth, 
                 // |   callProbability, 
@@ -114,10 +131,10 @@ namespace Portable.Gc.Simulator
                 // |   |    |     |   |   |   |   |   changeRefProbability, 
                 // |   |    |     |   |   |   |   |   |   eraseRefProbabilty
                 // |   |    |     |   |   |   |   |   |   |
-                { 0,   100, 0,    75, 10, 10, 10, 80, 80, 80 },
-                { 100, 0,   100,  75, 10, 10, 10, 80, 80, 80 }
+                { 0,   20,  00,   20, 10, 10, 10, 10, 10, 10 },
+                { 100, 10,  10,   20, 10, 10, 10, 10, 10, 10 },
             };
-            p.Mode = MutatorParametersModeKind.Sequence;
+            p.Mode = MutatorParametersModeKind.Flat;
 
 
             using (var runtime = new RuntimeGlobalAccessorImpl(gcFabric))

@@ -21,7 +21,7 @@ namespace Portable.Gc.Simulator.Impl
 
             set
             {
-                Marshal.WriteIntPtr(this.buffPtr, IntPtr.Zero);
+                Marshal.WriteIntPtr(this.buffPtr, value);
             }
         }
 
