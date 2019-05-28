@@ -16,24 +16,24 @@ namespace Portable.Gc.Simulator.Impl
         {
             get
             {
-                return Marshal.ReadIntPtr(this.buffPtr);
+                return Marshal.ReadIntPtr(buffPtr);
             }
 
             set
             {
-                Marshal.WriteIntPtr(this.buffPtr, value);
+                Marshal.WriteIntPtr(buffPtr, value);
             }
         }
 
         public RefBuffer()
         {
-            this.buffPtr = Marshal.AllocHGlobal(IntPtr.Size);
+            buffPtr = Marshal.AllocHGlobal(IntPtr.Size);
             this.Value = IntPtr.Zero;
         }
 
         public void Dispose()
         {
-            Marshal.FreeHGlobal(this.buffPtr);
+            Marshal.FreeHGlobal(buffPtr);
         }
     }
 
@@ -51,6 +51,7 @@ namespace Portable.Gc.Simulator.Impl
         public event Action StopRequested = delegate { };
         public event Action StopReleased = delegate { };
         public event Func<ObjPtr[]> GetRoots = delegate { return new ObjPtr[0]; };
+        public event Action<ObjPtr, ObjPtr> SpliceObjRefs = delegate { };
 
         int INativeLayoutContext.ObjRefDiff { get { return _typeIdFieldInfo.Offset; } }
 
@@ -168,7 +169,12 @@ namespace Portable.Gc.Simulator.Impl
 
         IRuntimeCollectionSession IRuntimeContextAccessor.BeginCollection()
         {
-            return new RuntimeCollectionSessionImpl(() => this.GetRoots().Select(p => new BlockPtr(p.value - _typeIdFieldInfo.Offset)).ToArray(), this.StopReleased);
+            return new RuntimeCollectionSessionImpl(
+                () => this.GetRoots().Select(p => new BlockPtr(p.value - _typeIdFieldInfo.Offset)).ToArray(),
+                (oldPtr, newPtr) => this.SpliceObjRefs(this.BlockToObj(oldPtr), this.BlockToObj(newPtr)),
+                this.StopReleased
+            );
+
         }
 
         void IRuntimeContextAccessor.RequestStop(Action callback)

@@ -101,6 +101,8 @@ namespace Portable.Gc.Simulator
             _params = parameters;
 
             _rnd = new Random(seed ?? Environment.TickCount);
+
+            ctx.Runtime.SpliceObjRefs += this.SpliceObject;
         }
 
         public IEnumerable<ObjPtr> GetRoots()
@@ -112,6 +114,16 @@ namespace Portable.Gc.Simulator
         {
             for (var frame = _root; frame != null; frame = frame.Next)
                 yield return frame;
+        }
+
+        public void SpliceObject(ObjPtr oldRef, ObjPtr newRef)
+        {
+            if (_ctx.Statics.Remove(oldRef))
+                _ctx.Statics.Add(newRef);
+
+            for (var f = _root; f != null; f = f.Next)
+                if (f.Locals.Remove(oldRef))
+                    f.Locals.Add(newRef);
         }
 
         public IEnumerable<(MutatorActionKind, ObjPtr)> DoWork()

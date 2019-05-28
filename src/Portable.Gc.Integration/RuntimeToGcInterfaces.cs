@@ -22,6 +22,7 @@ namespace Portable.Gc.Integration
         int RootPrioritiesCount { get; }
 
         IEnumerable<BlockPtr> GetRoots(int rootsPriority);
+        void SpliceObjRef(BlockPtr oldPtr, BlockPtr newPtr);
     }
 
     public interface IRuntimeGlobalAccessor : IRuntimeContextAccessor

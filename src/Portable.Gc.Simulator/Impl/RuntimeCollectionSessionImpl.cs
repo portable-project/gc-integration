@@ -11,15 +11,17 @@ namespace Portable.Gc.Simulator.Impl
     internal class RuntimeCollectionSessionImpl : IRuntimeCollectionSession
     {
         private readonly Func<BlockPtr[]> _getRoots;
+        private readonly Action<BlockPtr,BlockPtr> _spliceObj;
         private readonly Action _stopReleased;
 
         public int RootPrioritiesCount { get; private set; }
 
-        public RuntimeCollectionSessionImpl(Func<BlockPtr[]> getRoots, Action stopReleased)
+        public RuntimeCollectionSessionImpl(Func<BlockPtr[]> getRoots, Action<BlockPtr, BlockPtr> spliceObj,Action stopReleased)
         {
             this.RootPrioritiesCount = 1;
 
             _getRoots = getRoots;
+            _spliceObj = spliceObj;
             _stopReleased = stopReleased;
         }
 
@@ -31,6 +33,11 @@ namespace Portable.Gc.Simulator.Impl
         public void Dispose()
         {
             _stopReleased();
+        }
+
+        public void SpliceObjRef(BlockPtr oldPtr, BlockPtr newPtr)
+        {
+            _spliceObj(oldPtr, newPtr);
         }
     }
 
