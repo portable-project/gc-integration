@@ -83,8 +83,15 @@ namespace Portable.Gc.Simulator
 
             public LocalCtxFrame ResumePrev()
             {
-                this.Prev.Next = null;
-                return this.Prev;
+                if (this.Prev != null)
+                {
+                    this.Prev.Next = null;
+                    return this.Prev;
+                }
+                else
+                {
+                    return this;
+                }
             }
         }
 
