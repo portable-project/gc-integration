@@ -165,6 +165,7 @@ namespace Portable.Gc.Simulator
             foreach (var item in cfg.Probabilities.Items.OrderBy(e => e.StackDepth))
             {
                 var entry = new MutatorParametersEntry();
+                entry.StackDepth = item.StackDepth; 
 
                 foreach (var attr in item.AnyAttr)
                 {
